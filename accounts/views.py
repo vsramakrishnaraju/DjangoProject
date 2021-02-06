@@ -12,7 +12,7 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from knox.models import AuthToken
 from .serializers import UserSerializer, RegisterSerializer, UpdateUserSerializer
-
+import re
 # Register API
 
 
@@ -60,15 +60,26 @@ class ChangePasswordView(generics.UpdateAPIView):
             # Check old password
             if not self.object.check_password(serializer.data.get("old_password")):
                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-            # set_password also hashes the password that the user will get
-            self.object.set_password(serializer.data.get("new_password"))
-            self.object.save()
-            response = {
-                'status': 'success',
-                'code': status.HTTP_200_OK,
-                'message': 'Password updated successfully',
-                'data': []
-            }
+            # Check new password is valid
+            password = serializer.data.get("new_password")
+            if not re.findall('\d', password):
+                return Response({"new_password": ["The password must contain at least 1 digit, 0-9."]}, status=status.HTTP_400_BAD_REQUEST)
+            elif not re.findall('[A-Z]', password):
+                return Response({"new_password": ["The password must contain at least 1 uppercase letter, A-Z."]}, status=status.HTTP_400_BAD_REQUEST)
+            elif not re.findall('[a-z]', password):
+                return Response({"new_password": ["The password must contain at least 1 lowercase letter, a-z."]}, status=status.HTTP_400_BAD_REQUEST)
+            elif len(password) < 8:
+                return Response({"new_password": ["This password must contain at least %(min_length)d characters."]}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # set_password also hashes the password that the user will get
+                self.object.set_password(serializer.data.get("new_password"))
+                self.object.save()
+                response = {
+                    'status': 'success',
+                    'code': status.HTTP_200_OK,
+                    'message': 'Password updated successfully',
+                    'data': []
+                }
 
             return Response(response)
 

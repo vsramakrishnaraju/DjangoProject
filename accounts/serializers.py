@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
+import re
 
 # User Serializer
 
@@ -19,8 +22,31 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            validated_data['username'], validated_data['email'], validated_data['password'])
+        password = validated_data['password']
+        if not re.findall('\d', password):
+            raise ValidationError(
+                _("The password must contain at least 1 digit, 0-9."),
+                code='password_no_number',
+            )
+        elif not re.findall('[A-Z]', password):
+            raise ValidationError(
+                _("The password must contain at least 1 uppercase letter, A-Z."),
+                code='password_no_upper',
+            )
+        elif not re.findall('[a-z]', password):
+            raise ValidationError(
+                _("The password must contain at least 1 lowercase letter, a-z."),
+                code='password_no_lower',
+            )
+        elif len(password) < 8:
+            raise ValidationError(
+                _("This password must contain at least %(min_length)d characters."),
+                code='password_too_short',
+                params={'min_length': 8},
+            )
+        else:
+            user = User.objects.create_user(
+                validated_data['username'], validated_data['email'], validated_data['password'])
 
         return user
 
