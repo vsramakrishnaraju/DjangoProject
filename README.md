@@ -7,3 +7,8 @@ Admin credentials
 
 username : requien 
 password : foradream
+
+
+Endpoints: 
+
+check out urls.py in accounts 
