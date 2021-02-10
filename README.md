@@ -5,7 +5,7 @@ Build a functioning Django REST Framework API for all account processes: registe
 
 Admin credentials
 
-username : requien 
+username : requiem
 password : foradream
 
 
